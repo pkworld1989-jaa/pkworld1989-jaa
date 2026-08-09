@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>PeptiTrack Pro 💚</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Inter', -apple-system, 'Noto Sans Thai', sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 16px 12px 40px;
+        }
+        .app-container {
+            max-width: 480px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 44px;
+            padding: 24px 20px 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s;
+        }
+
+        /* ===== COLOR TOKENS ===== */
+        :root {
+            --green: #C7EA46;
+            --green-dark: #b0d63a;
+            --pink: #FF6B9D;
+            --pink-light: #ffe0ec;
+            --gray-bg: #f0f2f5;
+            --text-primary: #1a1d23;
+            --text-secondary: #6b7280;
+            --card-radius: 20px;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        .header h1 span {
+            color: var(--pink);
+        }
+        .header-badge {
+            background: var(--green);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a1d23;
+            letter-spacing: 0.3px;
+        }
+
+        /* ===== DASHBOARD CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--gray-bg);
+            border-radius: var(--card-radius);
+            padding: 14px 14px 16px;
+            transition: 0.15s;
+        }
+        .stat-card .label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card .value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 4px;
+            line-height: 1.2;
+        }
+        .stat-card .value .unit {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+        .stat-card .change {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        .change.positive {
+            color: var(--pink);
+        }
+        .change.negative {
+            color: var(--green-dark);
+        }
+
+        .stat-card.highlight {
+            background: var(--green);
+        }
+        .stat-card.highlight .value {
+            color: #1a1d23;
+        }
+        .stat-card.pink-bg {
+            background: var(--pink-light);
+        }
+
+        /* ===== CHART AREA ===== */
+        .chart-section {
+            background: var(--gray-bg);
+            border-radius: var(--card-radius);
+            padding: 16px 14px;
+            margin-bottom: 20px;
+        }
+        .chart-section .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 70px;
+        }
+        .bar-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .bar {
+            width: 100%;
+            max-width: 28px;
+            background: var(--pink);
+            border-radius: 6px 6px 0 0;
+            min-height: 4px;
+            transition: height 0.3s;
+            height: 20px;
+        }
+        .bar-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* ===== FORM ===== */
+        .form-section {
+            background: #ffffff;
+            border-radius: var(--card-radius);
+            padding: 0;
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            flex: 1 0 calc(50% - 5px);
+            min-width: 130px;
+        }
+        .form-group.full {
+            flex: 1 0 100%;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: #ffffff;
+            transition: 0.15s;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(199, 234, 70, 0.3);
+        }
+        .form-group input::placeholder {
+            color: #b0b8c4;
+            font-weight: 400;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: var(--green);
+            border: none;
+            border-radius: 30px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1d23;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+            background: var(--green-dark);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--pink-light);
+            color: var(--pink);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-secondary:active {
+            opacity: 0.6;
+        }
+
+        /* ===== RECENT LOGS ===== */
+        .log-section {
+            margin-top: 8px;
+        }
+        .log-section .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .log-section .section-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .log-item {
+            background: var(--gray-bg);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .log-item .log-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .log-item .log-left .date {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .log-item .log-left .detail {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        .log-item .log-right {
+            text-align: right;
+            font-weight: 600;
+            color: var(--pink);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            padding: 24px 0;
+        }
+
+        /* ===== TOAST / STATUS ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1d23;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+        }
+        .toast.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .toast.success {
+            background: var(--green);
+            color: #1a1d23;
+        }
+        .toast.error {
+            background: #ff4d6d;
+            color: #fff;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 400px) {
+            .app-container {
+                padding: 16px 12px 24px;
+                border-radius: 32px;
+            }
+            .stat-card .value {
+                font-size: 22px;
+            }
+            .form-group {
+                flex: 1 0 100%;
+            }
+            .header h1 {
+                font-size: 19px;
+            }
+        }
+        @media (min-width: 600px) {
+            .app-container {
+                max-width: 560px;
+                padding: 32px 28px 40px;
+            }
+            .stats-grid {
+                gap: 16px;
+            }
+            .stat-card {
+                padding: 18px 18px 20px;
+            }
+            .stat-card .value {
+                font-size: 30px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 0;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== APP ===== -->
+    <div class="app-container" id="app">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💚 Pepti<span>Track</span></h1>
+            <div class="header-badge">Pro</div>
+        </div>
+
+        <!-- DASHBOARD STATS -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card highlight">
+                <div class="label">รอบเอวล่าสุด</div>
+                <div class="value" id="latestWaist">-- <span class="unit">นิ้ว</span></div>
+                <div class="change" id="waistChange">--</div>
+            </div>
+            <div class="stat-card pink-bg">
+                <div class="label">น้ำหนักล่าสุด</div>
+                <div class="value" id="latestWeight">-- <span class="unit">กก.</span></div>
+                <div class="change" id="weightChange">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">ฉีดทั้งหมด</div>
+                <div class="value" id="totalInjections">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Due Date ถัดไป</div>
+                <div class="value" id="nextDueDate" style="font-size:18px;">--</div>
+            </div>
+        </div>
+
+        <!-- CHART -->
+        <div class="chart-section">
+            <div class="chart-title">
+                <span>📈 พัฒนาการรอบเอว</span>
+                <span id="chartEmpty" style="color:#b0b8c4;">รอข้อมูล...</span>
+            </div>
+            <div class="chart-bars" id="chartBars">
+                <!-- bars injected by JS -->
+            </div>
+        </div>
+
+        <!-- FORM -->
+        <div class="form-section">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📅 วันที่</label>
+                    <input type="date" id="injectDate" />
+                </div>
+                <div class="form-group">
+                    <label>⏰ เวลา</label>
+                    <input type="time" id="injectTime" value="07:00" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>💉 ปริมาณ (มก.)</label>
+                    <input type="number" id="dosageMg" placeholder="0.25" step="0.01" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>📆 Due Date (ครั้งถัดไป)</label>
+                    <input type="date" id="dueDate" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>⚖️ น้ำหนัก (กก.)</label>
+                    <input type="number" id="weightKg" placeholder="65" step="0.1" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>📏 รอบเอว (นิ้ว)</label>
+                    <input type="number" id="waistInch" placeholder="32" step="0.1" min="0" />
+                </div>
+            </div>
+
+            <button class="btn-primary" id="saveBtn">
+                💾 บันทึก + ส่ง Due Date ไป Calendar
+            </button>
+            <div style="text-align:right;margin-top:8px;">
+                <button class="btn-secondary" id="syncBtn" style="font-size:12px;">🔄 ดึงข้อมูลล่าสุด</button>
+            </div>
+        </div>
+
+        <!-- RECENT LOGS -->
+        <div class="log-section">
+            <div class="section-header">
+                <h3>📋 บันทึกล่าสุด</h3>
+                <span style="font-size:12px;color:var(--text-secondary);" id="logCount">0 รายการ</span>
+            </div>
+            <div id="logList">
+                <div class="empty-state">ยังไม่มีบันทึก เริ่มฉีดวันนี้เลย!</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ========================================================== -->
+    <!-- JAVASCRIPT                                                 -->
+    <!-- ========================================================== -->
+    <script>
+        // ============================================================
+        //  CONFIG — เปลี่ยน URL นี้เป็นของท่าน
+        // ============================================================
+        // 🔧 IMPORTANT: เปลี่ยน URL ด้านล่างเป็น URL Web App ของคุณ
+        const API_URL = 'https://script.google.com/macros/s/AKfycbx_fg6ttq5tRu8pBnOWoudEjn7mhF-09y7faHQk-MoAQIAfMe70SWPI2Gi5aUUlB8JB/exec';
+
+        // ตั้งค่า Due Date ห่างจากวันฉีดกี่วัน (ค่าเริ่มต้น 7 วัน)
+        const DUE_DATE_OFFSET_DAYS = 7;
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let logs = [];
+        let isSaving = false;
+
+        // ============================================================
+        //  DOM REFS
+        // ============================================================
+        const $ = (id) => document.getElementById(id);
+        const el = {
+            date: $('injectDate'),
+            time: $('injectTime'),
+            dosage: $('dosageMg'),
+            dueDate: $('dueDate'),
+            weight: $('weightKg'),
+            waist: $('waistInch'),
+            saveBtn: $('saveBtn'),
+            syncBtn: $('syncBtn'),
+            toast: $('toast'),
+            latestWaist: $('latestWaist'),
+            waistChange: $('waistChange'),
+            latestWeight: $('latestWeight'),
+            weightChange: $('weightChange'),
+            totalInjections: $('totalInjections'),
+            nextDueDate: $('nextDueDate'),
+            chartBars: $('chartBars'),
+            chartEmpty: $('chartEmpty'),
+            logList: $('logList'),
+            logCount: $('logCount'),
+        };
+
+        // ============================================================
+        //  UTILITY
+        // ============================================================
+        function formatDate(d) {
+            if (!d) return '--';
+            const dt = new Date(d);
+            return dt.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function formatTime(t) {
+            if (!t) return '--';
+            return t.slice(0, 5);
+        }
+
+        function addDays(dateStr, days) {
+            const d = new Date(dateStr);
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        function getToday() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getNowTime() {
+            return new Date().toTimeString().slice(0, 5);
+        }
+
+        function showToast(msg, type = 'info', duration = 3000) {
+            const t = el.toast;
+            t.textContent = msg;
+            t.className = 'toast ' + type + ' show';
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => { t.classList.remove('show'); }, duration);
+        }
+
+        // ============================================================
+        //  CALL API
+        // ============================================================
+        async function callApi(action, data = {}) {
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, ...data })
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const json = await res.json();
+                if (json.status === 'error') throw new Error(json.message);
+                return json;
+            } catch (err) {
+                console.error('API Error:', err);
+                throw err;
+            }
+        }
+
+        // ============================================================
+        //  LOAD DATA
+        // ============================================================
+        async function loadData() {
+            try {
+                const result = await callApi('getRecords');
+                logs = result.records || [];
+                renderDashboard();
+                renderChart();
+                renderLogs();
+                setDefaults();
+                return logs;
+            } catch (err) {
+                showToast('ไม่สามารถโหลดข้อมูล: ' + err.message, 'error');
+                // ใช้ข้อมูลตัวอย่าง
+                logs = getSampleData();
+                renderDashboard();
+                renderChart();
+                renderLogs();
+                return logs;
+            }
+        }
+
+        // ============================================================
+        //  SAVE RECORD
+        // ============================================================
+        async function saveRecord() {
+            if (isSaving) return;
+
+            const date = el.date.value;
+            const time = el.time.value;
+            const dosage = parseFloat(el.dosage.value);
+            const weight = parseFloat(el.weight.value);
+            const waist = parseFloat(el.waist.value);
+            const dueDate = el.dueDate.value;
+
+            if (!date) { showToast('กรุณาเลือกวันที่', 'error'); return; }
+            if (!dosage || dosage <= 0) { showToast('กรุณากรอกปริมาณยา (มก.)', 'error'); return; }
+            if (!weight || weight <= 0) { showToast('กรุณากรอกน้ำหนัก', 'error'); return; }
+            if (!waist || waist <= 0) { showToast('กรุณากรอกรอบเอว', 'error'); return; }
+            if (!dueDate) { showToast('กรุณาเลือก Due Date', 'error'); return; }
+
+            isSaving = true;
+            el.saveBtn.disabled = true;
+            el.saveBtn.textContent = '⏳ กำลังบันทึก...';
+
+            try {
+                const record = { date, time, dosage, weight, waist, dueDate };
+                const result = await callApi('saveRecord', { record });
+
+                if (result.status === 'success') {
+                    showToast('✅ บันทึกสำเร็จ! ส่ง Due Date ไป Calendar แล้ว', 'success');
+                    await loadData();
+                    // ตั้ง Due Date ถัดไป
+                    const nextDue = addDays(date, DUE_DATE_OFFSET_DAYS);
+                    el.dueDate.value = nextDue;
+                    el.dosage.value = '';
+                    el.weight.value = '';
+                    el.waist.value = '';
+                } else {
+                    showToast('❌ ' + (result.message || 'บันทึกไม่สำเร็จ'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+            } finally {
+                isSaving = false;
+                el.saveBtn.disabled = false;
+                el.saveBtn.textContent = '💾 บันทึก + ส่ง Due Date ไป Calendar';
+            }
+        }
+
+        // ============================================================
+        //  RENDER DASHBOARD
+        // ============================================================
+        function renderDashboard() {
+            if (!logs.length) {
+                el.latestWaist.innerHTML = '-- <span class="unit">นิ้ว</span>';
+                el.latestWeight.innerHTML = '-- <span class="unit">กก.</span>';
+                el.waistChange.textContent = '--';
+                el.weightChange.textContent = '--';
+                el.totalInjections.textContent = '0';
+                el.nextDueDate.textContent = '--';
+                return;
+            }
+
+            const sorted = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const latest = sorted[sorted.length - 1];
+            const first = sorted[0];
+
+            // รอบเอว
+            const waistVal = parseFloat(latest.waist) || 0;
+            el.latestWaist.innerHTML = waistVal.toFixed(1) + ' <span class="unit">นิ้ว</span>';
+            const firstWaist = parseFloat(first.waist) || 0;
+            if (firstWaist > 0 && waistVal > 0) {
+                const diff = waistVal - firstWaist;
+                const pct = (diff / firstWaist) * 100;
+                el.waistChange.textContent = (diff > 0 ? '⬆ ' : '⬇ ') + Math.abs(diff).toFixed(1) + ' นิ้ว (' + (pct > 0 ? '+' :
+                    '') + pct.toFixed(1) + '%)';
+                el.waistChange.className = 'change ' + (diff > 0 ? 'positive' : 'negative');
+            } else {
+                el.waistChange.textContent = '--';
+            }
+
+            // น้ำหนัก
+            const weightVal = parseFloat(latest.weight) || 0;
+            el.latestWeight.innerHTML = weightVal.toFixed(1) + ' <span class="unit">กก.</span>';
+            const firstWeight = parseFloat(first.weight) || 0;
+            if (firstWeight > 0 && weightVal > 0) {
+                const diff = weightVal - firstWeight;
+                const pct = (diff / firstWeight) * 100;
+                el.weightChange.textContent = (diff > 0 ? '⬆ ' : '⬇ ') + Math.abs(diff).toFixed(1) + ' กก. (' + (pct > 0 ? '+' :
+                    '') + pct.toFixed(1) + '%)';
+                el.weightChange.className = 'change ' + (diff > 0 ? 'positive' : 'negative');
+            } else {
+                el.weightChange.textContent = '--';
+            }
+
+            el.totalInjections.textContent = logs.length;
+
+            const lastDue = latest.dueDate;
+            if (lastDue) {
+                const d = new Date(lastDue);
+                const today = new Date();
+                const daysLeft = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+                if (daysLeft < 0) {
+                    el.nextDueDate.textContent = '⏰ เกินกำหนด';
+                } else if (daysLeft === 0) {
+                    el.nextDueDate.textContent = '🔥 วันนี้!';
+                } else {
+                    el.nextDueDate.textContent = formatDate(lastDue) + ' (' + daysLeft + ' วัน)';
+                }
+            } else {
+                el.nextDueDate.textContent = '--';
+            }
+        }
+
+        // ============================================================
+        //  RENDER CHART
+        // ============================================================
+        function renderChart() {
+            const barsContainer = el.chartBars;
+            const emptyLabel = el.chartEmpty;
+            if (!logs.length) {
+                barsContainer.innerHTML = '';
+                emptyLabel.textContent = 'รอข้อมูล...';
+                return;
+            }
+            emptyLabel.textContent = '';
+
+            const sorted = [...logs].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const recent = sorted.slice(-7);
+            const maxWaist = Math.max(...recent.map(r => parseFloat(r.waist) || 0), 10);
+
+            barsContainer.innerHTML = recent.map((r) => {
+                const val = parseFloat(r.waist) || 0;
+                const pct = maxWaist > 0 ? (val / maxWaist) * 100 : 0;
+                const height = Math.max(8, (pct / 100) * 56);
+                const label = new Date(r.date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit' });
+                return `<div class="bar-wrap">
+                            <div class="bar" style="height:${height}px;background:${val < 30 ? 'var(--green)' : 'var(--pink)'};"></div>
+                            <span class="bar-label">${label}</span>
+                        </div>`;
+            }).join('');
+        }
+
+        // ============================================================
+        //  RENDER LOGS
+        // ============================================================
+        function renderLogs() {
+            const list = el.logList;
+            const count = el.logCount;
+            if (!logs.length) {
+                list.innerHTML = '<div class="empty-state">ยังไม่มีบันทึก เริ่มฉีดวันนี้เลย!</div>';
+                count.textContent = '0 รายการ';
+                return;
+            }
+            const sorted = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const recent = sorted.slice(0, 10);
+            count.textContent = logs.length + ' รายการ';
+
+            list.innerHTML = recent.map((r) => `
+                        <div class="log-item">
+                            <div class="log-left">
+                                <span class="date">${formatDate(r.date)} ${formatTime(r.time)}</span>
+                                <span class="detail">💉 ${r.dosage} มก. · ⚖️ ${r.weight} กก. · 📏 ${r.waist} นิ้ว</span>
+                            </div>
+                            <div class="log-right">
+                                ${r.dueDate ? '📅 ' + formatDate(r.dueDate) : ''}
+                            </div>
+                        </div>
+                    `).join('');
+        }
+
+        // ============================================================
+        //  SET DEFAULTS
+        // ============================================================
+        function setDefaults() {
+            if (!el.date.value) el.date.value = getToday();
+            if (!el.time.value) el.time.value = getNowTime();
+            if (!el.dueDate.value && el.date.value) {
+                el.dueDate.value = addDays(el.date.value, DUE_DATE_OFFSET_DAYS);
+            }
+            el.date.addEventListener('change', function() {
+                if (this.value) {
+                    el.dueDate.value = addDays(this.value, DUE_DATE_OFFSET_DAYS);
+                }
+            });
+        }
+
+        // ============================================================
+        //  SAMPLE DATA
+        // ============================================================
+        function getSampleData() {
+            const today = getToday();
+            return [
+                { date: '2026-08-04', time: '07:00', dosage: 0.25, weight: 72.5, waist: 34.0,
+                dueDate: '2026-08-07' },
+                { date: '2026-08-07', time: '07:15', dosage: 0.25, weight: 71.8, waist: 33.5,
+                dueDate: '2026-08-10' },
+                { date: '2026-08-10', time: '07:05', dosage: 0.30, weight: 71.0, waist: 33.0,
+                dueDate: '2026-08-13' },
+                { date: '2026-08-13', time: '07:10', dosage: 0.30, weight: 70.2, waist: 32.5,
+                dueDate: '2026-08-16' },
+                { date: '2026-08-16', time: '07:00', dosage: 0.35, weight: 69.5, waist: 32.0,
+                dueDate: '2026-08-19' },
+            ];
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        async function init() {
+            // ตรวจสอบว่าเปลี่ยน URL หรือยัง
+            if (API_URL.includes('YOUR_DEPLOYMENT_ID')) {
+                showToast('📌 โปรดเปลี่ยน API_URL เป็น URL ของ Web App ของคุณ', 'info', 5000);
+                logs = getSampleData();
+                renderDashboard();
+                renderChart();
+                renderLogs();
+                setDefaults();
+            } else {
+                await loadData();
+            }
+
+            el.saveBtn.addEventListener('click', saveRecord);
+            el.syncBtn.addEventListener('click', () => {
+                if (API_URL.includes('YOUR_DEPLOYMENT_ID')) {
+                    showToast('📌 โหมดสาธิต — ข้อมูลตัวอย่าง', 'info');
+                    return;
+                }
+                loadData().then(() => showToast('🔄 อัปเดตข้อมูลแล้ว', 'success'));
+            });
+
+            document.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') saveRecord();
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
