@@ -484,13 +484,13 @@
     <div class="toast" id="toast"></div>
 
     <!-- ========================================================== -->
-    <!-- JAVASCRIPT                                                 -->
+    <!-- JAVASCRIPT (แก้ไขแล้ว ใช้ JSONP แทน fetch)                -->
     <!-- ========================================================== -->
     <script>
         // ============================================================
-        //  CONFIG — เปลี่ยน URL นี้เป็นของท่าน
+        //  CONFIG — เปลี่ยน URL นี้เป็น Web App URL ของคุณ
         // ============================================================
-        // 🔧 IMPORTANT: เปลี่ยน URL ด้านล่างเป็น URL Web App ของคุณ
+        // 🔧 เปลี่ยน URL ด้านล่างเป็น URL ของ Google Apps Script Web App
         const API_URL = 'https://script.google.com/macros/s/AKfycbw55CvLJYmTQ1E1KZXPA2AUDdRvFf1n6k1WZJ0I5O4RObSYJQxHoUaF3vWWBJjC-hsE/exec';
 
         // ตั้งค่า Due Date ห่างจากวันฉีดกี่วัน (ค่าเริ่มต้น 7 วัน)
@@ -565,20 +565,68 @@
         }
 
         // ============================================================
-        //  CALL API
+        //  JSONP REQUEST (ใช้แทน fetch เพื่อเลี่ยง CORS)
+        // ============================================================
+        function jsonpRequest(url, params) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                
+                // สร้าง URL พร้อม parameter
+                const urlParams = new URLSearchParams({
+                    callback: callbackName,
+                    ...params
+                });
+                const fullUrl = url + '?' + urlParams.toString();
+                
+                // กำหนด callback function
+                window[callbackName] = function(data) {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    resolve(data);
+                };
+                
+                // สร้าง script tag
+                const script = document.createElement('script');
+                script.src = fullUrl;
+                script.onerror = function() {
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                    reject(new Error('JSONP request failed'));
+                };
+                
+                document.body.appendChild(script);
+                
+                // Timeout 10 วินาที
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        reject(new Error('JSONP request timeout'));
+                    }
+                }, 10000);
+            });
+        }
+
+        // ============================================================
+        //  CALL API (ใช้ JSONP)
         // ============================================================
         async function callApi(action, data = {}) {
             try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action, ...data })
-                });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const json = await res.json();
-                if (json.status === 'error') throw new Error(json.message);
-                return json;
+                const params = { action };
+                
+                // ถ้าเป็นการบันทึก ส่งข้อมูลผ่าน query parameter
+                if (action === 'saveRecord' && data.record) {
+                    params.date = data.record.date || '';
+                    params.time = data.record.time || '';
+                    params.dosage = data.record.dosage || 0;
+                    params.weight = data.record.weight || 0;
+                    params.waist = data.record.waist || 0;
+                    params.dueDate = data.record.dueDate || '';
+                }
+                
+                const result = await jsonpRequest(API_URL, params);
+                if (result.status === 'error') throw new Error(result.message);
+                return result;
             } catch (err) {
                 console.error('API Error:', err);
                 throw err;
@@ -599,7 +647,6 @@
                 return logs;
             } catch (err) {
                 showToast('ไม่สามารถโหลดข้อมูล: ' + err.message, 'error');
-                // ใช้ข้อมูลตัวอย่าง
                 logs = getSampleData();
                 renderDashboard();
                 renderChart();
@@ -636,9 +683,8 @@
                 const result = await callApi('saveRecord', { record });
 
                 if (result.status === 'success') {
-                    showToast('✅ บันทึกสำเร็จ! ส่ง Due Date ไป Calendar แล้ว', 'success');
+                    showToast('✅ บันทึกสำเร็จ! ' + (result.calendar || 'ส่ง Due Date ไป Calendar แล้ว'), 'success');
                     await loadData();
-                    // ตั้ง Due Date ถัดไป
                     const nextDue = addDays(date, DUE_DATE_OFFSET_DAYS);
                     el.dueDate.value = nextDue;
                     el.dosage.value = '';
@@ -674,29 +720,25 @@
             const latest = sorted[sorted.length - 1];
             const first = sorted[0];
 
-            // รอบเอว
             const waistVal = parseFloat(latest.waist) || 0;
             el.latestWaist.innerHTML = waistVal.toFixed(1) + ' <span class="unit">นิ้ว</span>';
             const firstWaist = parseFloat(first.waist) || 0;
             if (firstWaist > 0 && waistVal > 0) {
                 const diff = waistVal - firstWaist;
                 const pct = (diff / firstWaist) * 100;
-                el.waistChange.textContent = (diff > 0 ? '⬆ ' : '⬇ ') + Math.abs(diff).toFixed(1) + ' นิ้ว (' + (pct > 0 ? '+' :
-                    '') + pct.toFixed(1) + '%)';
+                el.waistChange.textContent = (diff > 0 ? '⬆ ' : '⬇ ') + Math.abs(diff).toFixed(1) + ' นิ้ว (' + (pct > 0 ? '+' : '') + pct.toFixed(1) + '%)';
                 el.waistChange.className = 'change ' + (diff > 0 ? 'positive' : 'negative');
             } else {
                 el.waistChange.textContent = '--';
             }
 
-            // น้ำหนัก
             const weightVal = parseFloat(latest.weight) || 0;
             el.latestWeight.innerHTML = weightVal.toFixed(1) + ' <span class="unit">กก.</span>';
             const firstWeight = parseFloat(first.weight) || 0;
             if (firstWeight > 0 && weightVal > 0) {
                 const diff = weightVal - firstWeight;
                 const pct = (diff / firstWeight) * 100;
-                el.weightChange.textContent = (diff > 0 ? '⬆ ' : '⬇ ') + Math.abs(diff).toFixed(1) + ' กก. (' + (pct > 0 ? '+' :
-                    '') + pct.toFixed(1) + '%)';
+                el.weightChange.textContent = (diff > 0 ? '⬆ ' : '⬇ ') + Math.abs(diff).toFixed(1) + ' กก. (' + (pct > 0 ? '+' : '') + pct.toFixed(1) + '%)';
                 el.weightChange.className = 'change ' + (diff > 0 ? 'positive' : 'negative');
             } else {
                 el.weightChange.textContent = '--';
@@ -800,16 +842,11 @@
         function getSampleData() {
             const today = getToday();
             return [
-                { date: '2026-08-04', time: '07:00', dosage: 0.25, weight: 72.5, waist: 34.0,
-                dueDate: '2026-08-07' },
-                { date: '2026-08-07', time: '07:15', dosage: 0.25, weight: 71.8, waist: 33.5,
-                dueDate: '2026-08-10' },
-                { date: '2026-08-10', time: '07:05', dosage: 0.30, weight: 71.0, waist: 33.0,
-                dueDate: '2026-08-13' },
-                { date: '2026-08-13', time: '07:10', dosage: 0.30, weight: 70.2, waist: 32.5,
-                dueDate: '2026-08-16' },
-                { date: '2026-08-16', time: '07:00', dosage: 0.35, weight: 69.5, waist: 32.0,
-                dueDate: '2026-08-19' },
+                { date: '2026-08-04', time: '07:00', dosage: 0.25, weight: 72.5, waist: 34.0, dueDate: '2026-08-07' },
+                { date: '2026-08-07', time: '07:15', dosage: 0.25, weight: 71.8, waist: 33.5, dueDate: '2026-08-10' },
+                { date: '2026-08-10', time: '07:05', dosage: 0.30, weight: 71.0, waist: 33.0, dueDate: '2026-08-13' },
+                { date: '2026-08-13', time: '07:10', dosage: 0.30, weight: 70.2, waist: 32.5, dueDate: '2026-08-16' },
+                { date: '2026-08-16', time: '07:00', dosage: 0.35, weight: 69.5, waist: 32.0, dueDate: '2026-08-19' },
             ];
         }
 
@@ -817,24 +854,10 @@
         //  INIT
         // ============================================================
         async function init() {
-            // ตรวจสอบว่าเปลี่ยน URL หรือยัง
-            if (API_URL.includes('YOUR_DEPLOYMENT_ID')) {
-                showToast('📌 โปรดเปลี่ยน API_URL เป็น URL ของ Web App ของคุณ', 'info', 5000);
-                logs = getSampleData();
-                renderDashboard();
-                renderChart();
-                renderLogs();
-                setDefaults();
-            } else {
-                await loadData();
-            }
+            await loadData();
 
             el.saveBtn.addEventListener('click', saveRecord);
             el.syncBtn.addEventListener('click', () => {
-                if (API_URL.includes('YOUR_DEPLOYMENT_ID')) {
-                    showToast('📌 โหมดสาธิต — ข้อมูลตัวอย่าง', 'info');
-                    return;
-                }
                 loadData().then(() => showToast('🔄 อัปเดตข้อมูลแล้ว', 'success'));
             });
 
